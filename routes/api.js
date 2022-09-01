@@ -1,23 +1,44 @@
-"use strict";
+'use strict';
 
-const Translator = require("../components/translator.js");
+const Translator = require('../components/translator.js');
 
-module.exports = function(app) {
-    const translator = new Translator();
+module.exports = function (app) {
+  
+  const translator = new Translator();
 
-    app.route("/api/translate").post((req, res) => {
-        let { text, locale } = req.body;
-        let translation = `translation of ${text}`;
+  app.use((req, res, next) => {
+    console.log(`Method = ${req.method}, Path = ${req.originalUrl}, Body = ${JSON.stringify(req.body)}`);
+    next();
+  })
+  
+  app.route('/api/translate')
+    .post((req, res) => { 
+      translator
+        .setText(req.body.text)
+        .setLocale(req.body.locale);
 
-        translator.setLocale(locale);
-        console.log(translator.getLocale);
+      if (!translator.checkValid().isValid) {
+        console.log(translator.checkValid())
+        res.json({ error: translator.checkValid().error });
+        return;
+      }
+      
+      let result = {
+        text: req.body.text,
+        translation: translator.convertTime().translate().text
+      };
 
-        translator.checkTime(text);
-
+      if (translator.compareText(req.body.text)) {
         res.json({
-            text: text,
-            translation: translation,
+          text: req.body.text,
+          translation: 'Everything looks good to me!'
         });
-        console.log(`result = ${result}`);
+        return;
+      }
+
+      console.log(result);
+      
+      res.json(result);
+      
     });
 };
