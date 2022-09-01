@@ -74,22 +74,51 @@ class Translator {
   }
 
   translate() {
-    Object
-      .entries(americanOnly)
-      .forEach(([us, uk]) => {
-        this.text = this.text.replace(us, uk);
-      });
-    Object
-      .entries(americanToBritishSpelling)
-      .forEach(([us, uk]) => {
-        this.text = this.text.replace(us, uk);
-      });
-    Object
-      .entries(americanToBritishTitles)
-      .forEach(([us, uk]) => {
-        this.text = this.text.replace(us, uk);
-      });
 
+    if (this.locale === usToUk) {
+      Object
+        .entries(americanOnly)
+        .forEach(([us, uk]) => {
+          this.text = this.text.replace(us, `<span class="highlight">${uk}</span>`);
+        });
+      Object
+        .entries(americanToBritishSpelling)
+        .forEach(([us, uk]) => {
+          this.text = this.text.replace(us, `<span class="highlight">${uk}</span>`);
+        });
+      Object
+        .entries(americanToBritishTitles)
+        .forEach(([us, uk]) => {
+          this.text = this.text.replace(us, `<span class="highlight">${uk}</span>`);
+        });
+      Object
+        .entries(britishOnly)
+        .forEach(([us, uk]) => {
+          this.text = this.text.replace(us, `<span class="highlight">${uk}</span>`);
+        });
+      
+    } else if (this.locale===ukToUs) {
+      Object
+        .entries(americanOnly)
+        .forEach(([us, uk]) => {
+          this.text = this.text.replace(uk, `<span class="highlight">${us}</span>`);
+        });
+      Object
+        .entries(americanToBritishSpelling)
+        .forEach(([us, uk]) => {
+          this.text = this.text.replace(uk, `<span class="highlight">${us}</span>`);
+        });
+      Object
+        .entries(americanToBritishTitles)
+        .forEach(([us, uk]) => {
+          this.text = this.text.replace(uk, `<span class="highlight">${us}</span>`);
+        });
+      Object
+        .entries(britishOnly)
+        .forEach(([us, uk]) => {
+          this.text = this.text.replace(uk, `<span class="highlight">${us}</span>`);
+        });
+    }
     
     return this;
   }
