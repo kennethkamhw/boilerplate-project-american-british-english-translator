@@ -18,14 +18,14 @@ class Translator {
       return { isValid: false, error: 'No text to translate' };
     }
 
-    // check if locale is invalid value
-    if (!((this.locale===usToUk)|(this.locale===ukToUs))) {
-      return { isValid: false, error: 'Invalid value for locale field' };
-    }
-
     // check if missing field(s)
     if (!this.text | !this.locale) {
       return { isValid: false, error: 'Required field(s) missing' };
+    }
+
+    // check if locale is invalid value
+    if (!((this.locale===usToUk)|(this.locale===ukToUs))) {
+      return { isValid: false, error: 'Invalid value for locale field' };
     }
 
     // if all ok return true
@@ -33,7 +33,7 @@ class Translator {
   }
 
   compareText(textToCompare) {
-    return this.text===textToCompare ? true: false;
+    return this.text.toLowerCase()===textToCompare.toLowerCase() ? true: false;
   }
   
   setText(text) {
@@ -47,23 +47,23 @@ class Translator {
   }
 
   convertTime() {
-    let regexUS = /(([0|1][0-9])|(2[0-4]))(\.)([0-5][0-9])/g;
-    let regexUK = /(([0|1][0-9])|(2[0-4]))(:)([0-5][0-9])/g;
+    let regexUk = /(([0|1]?[0-9])|(2[0-4]))(\.)([0-5][0-9])/g;
+    let regexUs = /(([0|1]?[0-9])|(2[0-4]))(:)([0-5][0-9])/g;
     let result = [];
     let newStringList = [];
     
     if (this.locale === usToUk) {
-      result = this.text.match(regexUS);
+      result = this.text.match(regexUs);
       if (result!==null) {
-        newStringList = result.map(e=> e.replace(".",":"));
+        newStringList = result.map(e=> e.replace(":","."));
         result.forEach((e,i)=>{
           this.text = this.text.replace(e, `<span class="highlight">${newStringList[i]}</span>`);
       })
     }
     }else {
-      result = this.text.match(regexUK);
+      result = this.text.match(regexUk);
       if (result!==null) { 
-        newStringList = result.map(e=> e.replace(":","."));
+        newStringList = result.map(e=> e.replace(".",":"));
         result.forEach((e,i)=>{
           this.text = this.text.replace(e, `<span class="highlight">${newStringList[i]}</span>`);
       });
@@ -73,53 +73,36 @@ class Translator {
     return this;
   }
 
+  reverseKeyAndValue(dictionary) {
+    return Object.fromEntries(Object.entries(dictionary).map(([key, value])=> {
+      return [value, key]
+    }))
+  }
+  
+  searchAndReplaceText(dictionary, locale) {
+    let dictionaryObjectList = Object.entries(dictionary);
+    dictionaryObjectList.forEach(([us, uk]) => {
+      this.text = this.text.replace(us, `<span class="highlight">${uk}</span>`);
+    });
+  }
+
+  useDictionaries(dictionaryCollection) {
+    dictionaryCollection.forEach(dictionary => {
+      this.searchAndReplaceText(dictionary, this.locale)
+    });
+  }
+  
   translate() {
 
-    if (this.locale === usToUk) {
-      Object
-        .entries(americanOnly)
-        .forEach(([us, uk]) => {
-          this.text = this.text.replace(us, `<span class="highlight">${uk}</span>`);
-        });
-      Object
-        .entries(americanToBritishSpelling)
-        .forEach(([us, uk]) => {
-          this.text = this.text.replace(us, `<span class="highlight">${uk}</span>`);
-        });
-      Object
-        .entries(americanToBritishTitles)
-        .forEach(([us, uk]) => {
-          this.text = this.text.replace(us, `<span class="highlight">${uk}</span>`);
-        });
-      Object
-        .entries(britishOnly)
-        .forEach(([us, uk]) => {
-          this.text = this.text.replace(us, `<span class="highlight">${uk}</span>`);
-        });
-      
-    } else if (this.locale===ukToUs) {
-      Object
-        .entries(americanOnly)
-        .forEach(([us, uk]) => {
-          this.text = this.text.replace(uk, `<span class="highlight">${us}</span>`);
-        });
-      Object
-        .entries(americanToBritishSpelling)
-        .forEach(([us, uk]) => {
-          this.text = this.text.replace(uk, `<span class="highlight">${us}</span>`);
-        });
-      Object
-        .entries(americanToBritishTitles)
-        .forEach(([us, uk]) => {
-          this.text = this.text.replace(uk, `<span class="highlight">${us}</span>`);
-        });
-      Object
-        .entries(britishOnly)
-        .forEach(([us, uk]) => {
-          this.text = this.text.replace(uk, `<span class="highlight">${us}</span>`);
-        });
-    }
+    const usToUkDictionaryCollection = [americanOnly, americanToBritishSpelling, americanToBritishTitles];
+
+    const ukToUsDictionaryCollection = [britishOnly, this.reverseKeyAndValue(americanToBritishSpelling), this.reverseKeyAndValue(americanToBritishTitles)]
     
+    if (this.locale === usToUk) {
+      this.useDictionaries(usToUkDictionaryCollection);
+    } else if (this.locale === ukToUs) {
+      this.useDictionaries(ukToUsDictionaryCollection);
+    }
     return this;
   }
 }
